@@ -85,12 +85,12 @@ For the following graph, we would like to predict labels on the unlabeled, beige
 
 ![example](../assets/img/example.png?style=centerme)
 
-To make those predictions, we will use a *Probabilistic Relational Classifier*, the basic idea of which is that the class probability of Y~i~ is a weighted average of the class probabilities of its neighbors. To initialize, we will use the ground-truth labels of our labeled nodes, and for the unlabeled nodes, we will initialize Y uniformly, for instance as $$P(Y_{unlabeled}) = 0.5$$--or if you have a prior that you trust, you can use that here. After initialization, you may begin to update all nodes, in random order, until convergence conditions or you have reached the maximum number of iterations. Mathematically, each repetition will look like this:
+To make those predictions, we will use a *Probabilistic Relational Classifier*, the basic idea of which is that the class probability of $$Y_i$$ is a weighted average of the class probabilities of its neighbors. To initialize, we will use the ground-truth labels of our labeled nodes, and for the unlabeled nodes, we will initialize Y uniformly, for instance as $$P(Y_{unlabeled}) = 0.5$$--or if you have a prior that you trust, you can use that here. After initialization, you may begin to update all nodes, in random order, until convergence conditions or you have reached the maximum number of iterations. Mathematically, each repetition will look like this:
 $$
-P(Y~i~= c) = \frac{1}{\vert N_i\vert}{\sum_{(i,j)\in E} W_{(i,j)}} \sum W_{(i,j)} P(Y_j = c)
+P(Y_i= c) = \frac{1}{\vert N_i\vert}{\sum_{(i,j)\in E} W_{(i,j)}} \sum W_{(i,j)} P(Y_j = c)
 $$
 
-Where *N~i~* is the number of neighbors of *i* and *W* is the weighted edge strength from *i* to *j*. 
+Where $$N_i$$ is the number of neighbors of *i* and *W* is the weighted edge strength from *i* to *j*. 
 
 We will update the nodes in *random order* until we reach convergence or our maximum number of iterations. We do not have to update in random order, but it has been shown empirically that it works very well across many cases, so we suggest random ordering. We must remember, however, that our results *will* be influenced by the order of nodes, especially for smaller graphs (larger graphs are less sensitive to that).
 
@@ -103,10 +103,11 @@ It should be noted, however, that there are 2 additional caveats:
 
 As mentioned in the previous section, relational classifiers do not use node attributes, and so in order to leverage them we use iterative classification which allows you to classify node i based not only on the labels of its neighbors, but on its own attributes in addition. This process consists of the following steps:
 
-*  Bootstrap phase:
-  * create a flat vector $$a_i$$  for each node *i*
-  * Train a local classifier, our baseline, $$f(a_i)$$, (e.g. SVM, kNN) using $$a_i$$
+* Bootstrap phase
+  * create a flat vector $$a_i$$  for each node *i*.
+  * Train a local classifier, our baseline, $$f(a_i)$$, (e.g. SVM, kNN) using $$a_i$$.
   * Aggregate neighbors using count, mode, proportion, mean, exists, etc. We must determine the most sensical way to aggregate our futures.
+
 * Iteration phase
   * Repeat for each node i:
     * Update node vector $$a_i$$
@@ -121,7 +122,7 @@ This is very similar to what we did before with the relational classifier, the k
 
 ### Loopy Belief Propagation
 
-Belief propagation is a dynamic programming technique that answersconditional probabiliy queries in a graphical model. It's an iterative process in which every neighbor variable *talk* to each other, by **passing messages.** 
+Belief propagation is a dynamic programming technique that answers conditional probabiliy queries in a graphical model. It's an iterative process in which every neighbor variables *talk* to each other, by **passing messages.** 
 
 ![message_passing](../assets/img/message_passing.png?style=centerme)
 
@@ -146,11 +147,11 @@ Once we have all notation, we can compile this all together to give us the messa
 
  $$ m_i\to_j(Y_j) = \alpha \sum \psi (Y_i, Y_j) \phi_i(Y_i)\Pi_{k \in \mathcal{N}\backslash  j}  m_{k\to i}$$         $$         \forall \mathcal{L}$$
 
-This equation summarizes are task: to calculate the message from i to j, we will sum over all of our states the label-label potential multiplied by our prior, multiplied by the product of all the messages sent by neighbors from the previous rounds. To initialize, we set all of our messages equal to 1.  Then, we  calculate our message from *i* to *j*, using the formula described above. We will repeat this for each node until we reach convergence, and then we can calculate our final assignment,  *i*'s belief of being in state $$Y_i$$, or $$b_i(Y_i)$$.
+This equation summarizes our task: to calculate the message from i to j, we will sum over all of our states the label-label potential multiplied by our prior, multiplied by the product of all the messages sent by neighbors from the previous rounds. To initialize, we set all of our messages equal to 1.  Then, we  calculate our message from *i* to *j*, using the formula described above. We will repeat this for each node until we reach convergence, and then we can calculate our final assignment,  *i*'s belief of being in state $$Y_i$$, or $$b_i(Y_i)$$.
 
 ![belief_propagation](../assets/img/belief_propagation.png?style=centerme)
 
-Belief propagation has many advantages. It's easy to program and easy to parallelize. Additionally, it's very general and can apply to any graphical model with any form of potentials (higher order pairwise). However, similar to the other techiques, convergence is once again, not guaranteed, this is particularly an issue when their are many closed loops. It should be noted that we may also learn our priors. 
+Belief propagation has many advantages. It's easy to program and easy to parallelize. Additionally, it's very general and can apply to any graphical model with any form of potentials (higher order pairwise). However, similar to the other techiques, convergence is once again, not guaranteed. This is particularly an issue when their are many closed loops. It should be noted that we may also learn our priors. 
 
 A good example of Belief Propagation in action is [detection of online auction fraud](http://www.cs.cmu.edu/~christos/PUBLICATIONS/netprobe-www07.pdf). 
 
